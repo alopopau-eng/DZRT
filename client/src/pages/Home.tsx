@@ -1,8 +1,8 @@
 import { Navbar } from "@/components/layout/Navbar";
-import { Hero } from "@/components/home/Hero";
 import { ProductGrid } from "@/components/home/ProductGrid";
 import { InfoSection } from "@/components/home/InfoSection";
 import { Footer } from "@/components/layout/Footer";
+import { Hero } from "@/components/home/Hero";
 
 export default function Home() {
   return (

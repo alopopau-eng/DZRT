@@ -1,54 +1,54 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import type { Product } from "@shared/schema";
+"use client"
+
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import type { Product } from "@shared/schema"
 
 export interface CartItem {
-  id: number;
-  productId: number;
-  nameAr: string;
-  nameEn: string;
-  strength: string;
-  price: number;
-  quantity: number;
-  imageUrl: string;
+  id: number
+  productId: number
+  nameAr: string
+  nameEn: string
+  strength: string
+  price: number
+  quantity: number
+  imageUrl: string
 }
 
 interface CartContextType {
-  items: CartItem[];
-  addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
-  clearCart: () => void;
-  getItemCount: () => number;
-  getSubtotal: () => number;
-  getTotal: (shippingCost: number) => number;
+  items: CartItem[]
+  addItem: (product: Product, quantity?: number) => void
+  removeItem: (productId: number) => void
+  updateQuantity: (productId: number, quantity: number) => void
+  clearCart: () => void
+  getItemCount: () => number
+  getSubtotal: () => number
+  getTotal: (shippingCost: number) => number
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+const CartContext = createContext<CartContextType | undefined>(undefined)
 
-const CART_STORAGE_KEY = "dzrt_cart";
+const CART_STORAGE_KEY = "dzrt_cart"
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(CART_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem(CART_STORAGE_KEY)
+      return saved ? JSON.parse(saved) : []
     }
-    return [];
-  });
+    return []
+  })
 
   useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
+  }, [items])
 
   const addItem = (product: Product, quantity = 1) => {
     setItems((prev) => {
-      const existing = prev.find((item) => item.productId === product.id);
+      const existing = prev.find((item) => item.productId === product.id)
       if (existing) {
         return prev.map((item) =>
-          item.productId === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
+          item.productId === product.id ? { ...item, quantity: item.quantity + quantity } : item,
+        )
       }
       return [
         ...prev,
@@ -58,45 +58,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
           nameAr: product.nameAr,
           nameEn: product.nameEn,
           strength: product.strength,
-          price: parseFloat(product.price),
+          price: Number.parseFloat(product.price),
           quantity,
           imageUrl: product.imageUrl,
         },
-      ];
-    });
-  };
+      ]
+    })
+  }
 
   const removeItem = (productId: number) => {
-    setItems((prev) => prev.filter((item) => item.productId !== productId));
-  };
+    setItems((prev) => prev.filter((item) => item.productId !== productId))
+  }
 
   const updateQuantity = (productId: number, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(productId);
-      return;
+      removeItem(productId)
+      return
     }
-    setItems((prev) =>
-      prev.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item
-      )
-    );
-  };
+    setItems((prev) => prev.map((item) => (item.productId === productId ? { ...item, quantity } : item)))
+  }
 
   const clearCart = () => {
-    setItems([]);
-  };
+    setItems([])
+  }
 
   const getItemCount = () => {
-    return items.reduce((acc, item) => acc + item.quantity, 0);
-  };
+    return items.reduce((acc, item) => acc + item.quantity, 0)
+  }
 
   const getSubtotal = () => {
-    return items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  };
+    return items.reduce((acc, item) => acc + item.price * item.quantity, 0)
+  }
 
   const getTotal = (shippingCost: number) => {
-    return getSubtotal() + shippingCost;
-  };
+    return getSubtotal() + shippingCost
+  }
 
   return (
     <CartContext.Provider
@@ -113,13 +109,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </CartContext.Provider>
-  );
+  )
 }
 
 export function useCart() {
-  const context = useContext(CartContext);
+  const context = useContext(CartContext)
   if (context === undefined) {
-    throw new Error("useCart must be used within a CartProvider");
+    throw new Error("useCart must be used within a CartProvider")
   }
-  return context;
+  return context
 }
