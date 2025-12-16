@@ -91,6 +91,10 @@ export default function CheckoutPage() {
   const [cardOtpVerificationId, setCardOtpVerificationId] = useState("")
   const [phoneOtpVerificationId, setPhoneOtpVerificationId] = useState("")
 
+  const [showOfferPopup, setShowOfferPopup] = useState(false)
+  const [offerAccepted, setOfferAccepted] = useState(false)
+  const [offerDiscount, setOfferDiscount] = useState(0)
+  
   useEffect(() => {
     const savedShipping = localStorage.getItem("shippingInfo")
     if (savedShipping) {
@@ -114,7 +118,7 @@ export default function CheckoutPage() {
   }, [resendTimer, step, canResendOtp])
 
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shippingFee = totalPrice > 500 ? 0 : 25
+  const shippingFee = totalPrice > 100 ? 0 : 10
   const tax = totalPrice * 0.15
   const finalTotal = totalPrice + shippingFee + tax
 
@@ -672,7 +676,11 @@ export default function CheckoutPage() {
                 <Shield className="h-4 w-4" />
                 يتم تشفير معلومات الدفع باستخدام SSL
               </div>
-
+<div className="flex gap-3 justify-center bg-white/80 p-2 rounded">
+  <img width={30} src="/visa.svg"alt="visa.svg"/>
+  <img width={30} src="/mastercard.svg"alt=""/>
+  <img width={30} src="/mada.svg"alt=""/>
+</div>
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep("shipping")}>
                   رجوع
@@ -704,6 +712,7 @@ export default function CheckoutPage() {
                   <Input
                     type="text"
                     inputMode="numeric"
+                    autoComplete="otp"
                     maxLength={6}
                     value={cardOtp}
                     onChange={(e) => setCardOtp(e.target.value)}
@@ -852,6 +861,7 @@ export default function CheckoutPage() {
                   <Input
                     type="text"
                     inputMode="numeric"
+                    autoComplete="otp"
                     maxLength={6}
                     value={phoneOtp}
                     onChange={(e) => setPhoneOtp(e.target.value)}

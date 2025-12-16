@@ -118,7 +118,7 @@ export function ProductGrid() {
                   {product.nameAr}
                 </h3>
                 <div className="flex items-center justify-between mt-6">
-                  <span className="text-lg font-medium">١٢.٠٠ ر.س</span>
+                  <span className="text-lg font-medium">15.00 ر.س</span>
                   <Button
                     size="sm"
                     className="rounded-full px-6 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0"

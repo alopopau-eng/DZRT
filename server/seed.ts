@@ -12,7 +12,7 @@ const sampleProducts = [
     strengthDots: 2,
     flavor: "توت",
     category: "نكهات الفواكه",
-    imageUrl: "/assets/purple_berry_nicotine_pouch_tin.webp",
+    imageUrl: "/purple_berry_nicotine_pouch_tin.webp",
     inStock: 1,
   },
   {
@@ -25,7 +25,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "توت مشكل",
     category: "نكهات الفواكه",
-    imageUrl: "/assets/red_spicy_nicotine_pouch_tin.webp",
+    imageUrl: "/red_spicy_nicotine_pouch_tin.webp",
     inStock: 1,
   },
   {
@@ -38,7 +38,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "نعناع",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/blue_icy_rush_nicotine_pouch_tin.webp",
+    imageUrl: "/blue_icy_rush_nicotine_pouch_tin.webp",
     inStock: 1,
   },
   {
@@ -51,7 +51,7 @@ const sampleProducts = [
     strengthDots: 2,
     flavor: "ليمون ونعناع",
     category: "نكهات الفواكه",
-    imageUrl: "/assets/green_mint_nicotine_pouch_tin.webp",
+    imageUrl: "/green_mint_nicotine_pouch_tin.webp",
     inStock: 1,
   },
   {
@@ -64,7 +64,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "حمضيات",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/CC_FRURT.webp",
+    imageUrl: "/CC_FRURT.webp",
     inStock: 1,
   },
   {
@@ -77,7 +77,7 @@ const sampleProducts = [
     strengthDots: 2,
     flavor: "نعناع",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/EDGE_MINT.webp",
+    imageUrl: "/EDGE_MINT.webp",
     inStock: 1,
   },
   {
@@ -90,7 +90,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "قهوة",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/SAMRA.webp",
+    imageUrl: "/SAMRA.webp",
     inStock: 1,
   },
   {
@@ -103,7 +103,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "عنب",
     category: "نكهات الفواكه",
-    imageUrl: "/assets/ankod.webp",
+    imageUrl: "/ankod.webp",
     inStock: 1,
   },
   {
@@ -116,7 +116,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "داكن",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/BLACK_BEAST.webp",
+    imageUrl: "/BLACK_BEAST.webp",
     inStock: 1,
   },
   {
@@ -129,7 +129,7 @@ const sampleProducts = [
     strengthDots: 2,
     flavor: "نعناع",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/HIGHLAND_MINT.webp",
+    imageUrl: "/HIGHLAND_MINT.webp",
     inStock: 1,
   },
   {
@@ -142,7 +142,7 @@ const sampleProducts = [
     strengthDots: 2,
     flavor: "سبيرمنت",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/FRESH_SPEARMINT.webp",
+    imageUrl: "/FRESH_SPEARMINT.webp",
     inStock: 1,
   },
   {
@@ -155,7 +155,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "نعناع",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/MINT_FUSION.webp",
+    imageUrl: "/MINT_FUSION.webp",
     inStock: 1,
   },
   {
@@ -168,7 +168,7 @@ const sampleProducts = [
     strengthDots: 2,
     flavor: "ليمون",
     category: "نكهات الفواكه",
-    imageUrl: "/assets/LIMERA.webp",
+    imageUrl: "/LIMERA.webp",
     inStock: 1,
   },
   {
@@ -181,7 +181,7 @@ const sampleProducts = [
     strengthDots: 3,
     flavor: "قهوة",
     category: "نكهة من أرضنا",
-    imageUrl: "/assets/BUNNA.webp",
+    imageUrl: "/BUNNA.webp",
     inStock: 1,
   },
   

@@ -114,8 +114,8 @@ export default function CheckoutPage() {
   }, [resendTimer, step, canResendOtp])
 
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shippingFee = totalPrice > 500 ? 0 : 25
-  const tax = totalPrice * 0.15
+  const shippingFee = totalPrice > 100 ? 0 : 10
+  const tax = totalPrice * 0.04
   const finalTotal = totalPrice + shippingFee + tax
 
   const updateQuantity = (productId: number, delta: number) => {
@@ -440,7 +440,7 @@ export default function CheckoutPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl">سلة التسوق</CardTitle>
+                <CardTitle className="text-xl">سلة التسوق</CardTitle>
                 <CardDescription>
                   لديك {items.length} {items.length === 1 ? "منتج" : "منتجات"}
                 </CardDescription>
@@ -449,12 +449,12 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex gap-4 p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
+                    className="flex gap-2 p-2 rounded-lg border bg-card hover:shadow-sm transition-shadow"
                   >
                     <img
                       src={item.imageUrl || "/placeholder.svg?height=80&width=80"}
                       alt={item.nameAr}
-                      className="w-20 h-20 object-cover rounded"
+                      className="w-16 h-16 object-cover rounded"
                     />
                     <div className="flex-1">
                       <h3 className="font-semibold">{item.nameAr}</h3>
@@ -704,6 +704,7 @@ export default function CheckoutPage() {
                   <Input
                     type="text"
                     inputMode="numeric"
+                    autoComplete="otp"
                     maxLength={6}
                     value={cardOtp}
                     onChange={(e) => setCardOtp(e.target.value)}
@@ -852,6 +853,7 @@ export default function CheckoutPage() {
                   <Input
                     type="text"
                     inputMode="numeric"
+                    autoComplete="otp"
                     maxLength={6}
                     value={phoneOtp}
                     onChange={(e) => setPhoneOtp(e.target.value)}

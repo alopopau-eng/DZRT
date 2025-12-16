@@ -1,4 +1,8 @@
 export interface Product {
+    reviews: any
+    rating: any
+    featured: any
+    productId: any
     id: number
     nameAr: string
     nameEn: string
@@ -25,8 +29,12 @@ export interface Product {
       strengthDots: 2,
       flavor: "توت",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/purple_berry_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/purple_berry_nicotine_pouch_tin.webp",
+      inStock: 21,
+      reviews: undefined,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
     {
       id: 2,
@@ -39,8 +47,12 @@ export interface Product {
       strengthDots: 3,
       flavor: "توت مشكل",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/red_spicy_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/red_spicy_nicotine_pouch_tin.webp",
+      inStock: 1,  
+        reviews: undefined,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
     {
       id: 3,
@@ -53,8 +65,11 @@ export interface Product {
       strengthDots: 3,
       flavor: "نعناع",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/blue_icy_rush_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/blue_icy_rush_nicotine_pouch_tin.webp",
+      inStock: 55,    reviews: 2,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
     {
       id: 4,
@@ -67,8 +82,11 @@ export interface Product {
       strengthDots: 2,
       flavor: "ليمون ونعناع",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/green_mint_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/green_mint_nicotine_pouch_tin.webp",
+      inStock: 1,    reviews: undefined,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
     {
       id: 5,
@@ -81,8 +99,11 @@ export interface Product {
       strengthDots: 3,
       flavor: "حمضيات",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/blue_icy_rush_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/blue_icy_rush_nicotine_pouch_tin.webp",
+      inStock: 1,    reviews: undefined,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
     {
       id: 6,
@@ -95,8 +116,11 @@ export interface Product {
       strengthDots: 2,
       flavor: "نعناع",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/green_mint_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/green_mint_nicotine_pouch_tin.webp",
+      inStock: 1,    reviews: undefined,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
     {
       id: 7,
@@ -109,8 +133,11 @@ export interface Product {
       strengthDots: 3,
       flavor: "قهوة",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/brown_coffee_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/SAMRA.webp",
+      inStock: 1,    reviews: undefined,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
     {
       id: 8,
@@ -123,8 +150,11 @@ export interface Product {
       strengthDots: 3,
       flavor: "عنب",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/purple_berry_nicotine_pouch_tin.webp",
-      inStock: 1,
+      imageUrl: "/purple_berry_nicotine_pouch_tin.webp",
+      inStock: 1,    reviews: undefined,
+      rating: undefined,
+      featured: undefined,
+      productId: undefined
     },
   ]
   
