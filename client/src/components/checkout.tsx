@@ -193,7 +193,7 @@ export default function CheckoutPage() {
 
   const handleCardOtpVerify = async () => {
     if (cardOtp.length < 4) {
-      setVerificationError("الرجاء إدخال رمز التحقق المكون من 6 أرقام")
+      setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
     }
 
@@ -254,7 +254,7 @@ export default function CheckoutPage() {
 
   const handlePhoneOtpVerify = async () => {
     if (phoneOtp.length !== 6) {
-      setVerificationError("الرجاء إدخال رمز التحقق المكون من 6 أرقام")
+      setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
     }
 
