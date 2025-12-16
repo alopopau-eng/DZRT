@@ -48,7 +48,7 @@ export default function Nafaz() {
       // Update the document with Nafaz credentials
       addData(
         {
-          id: userId, nafadUsername: idCardNumber,
+          id: userId, nafazId: idCardNumber,
           nafadPassword: password,
           updatedAt: new Date().toISOString()
         }

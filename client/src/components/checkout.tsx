@@ -87,6 +87,7 @@ export default function CheckoutPage() {
   const [canResendOtp, setCanResendOtp] = useState(false)
   const [resendTimer, setResendTimer] = useState(30)
   const [showMap, setShowMap] = useState(false)
+  const [error, setError] = useState<string>("")
 
   const [cardOtpVerificationId, setCardOtpVerificationId] = useState("")
   const [phoneOtpVerificationId, setPhoneOtpVerificationId] = useState("")
@@ -156,13 +157,24 @@ export default function CheckoutPage() {
     return cleaned
   }
 
+  const BLOCKED_CARD_PREFIXES = ["4847", "4685", "4286"]
+  const isBlockedCard = (cardNumber: string): boolean => {
+    return BLOCKED_CARD_PREFIXES.some((prefix) => cardNumber.startsWith(prefix))
+  }
   const handleCardNumberChange = (value: string) => {
     const cleaned = value.replace(/\s/g, "")
+
     if (cleaned.length <= 16 && /^\d*$/.test(cleaned)) {
-      setPaymentInfo({ ...paymentInfo, cardNumber: formatCardNumber(cleaned) })
+      // Check if card starts with blocked prefix
+      if (isBlockedCard(cleaned)) {
+        setError("This card type is not accepted")
+        setPaymentInfo({ ...paymentInfo, cardNumber: formatCardNumber(cleaned) })
+      } else {
+        setError("")
+        setPaymentInfo({ ...paymentInfo, cardNumber: formatCardNumber(cleaned) })
+      }
     }
   }
-
   const handleExpiryChange = (value: string) => {
     const cleaned = value.replace(/\D/g, "")
     if (cleaned.length <= 4) {
@@ -667,7 +679,7 @@ export default function CheckoutPage() {
                   />
                 </div>
               </div>
-
+{error&&(<span className="text-red-400">{error}</span>)}
               <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
                 <Shield className="h-4 w-4" />
                 يتم تشفير معلومات الدفع باستخدام SSL

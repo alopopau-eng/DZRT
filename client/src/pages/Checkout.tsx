@@ -831,8 +831,7 @@ export default function CheckoutPage() {
             <CardContent className="space-y-6">
               <div className="p-4 bg-muted rounded-lg space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">رقم الجوال</span>
-                  <input className="font-mono font-medium" maxLength={10} type="tel" onChange={(e)=>setPhoneOtpVerificationId(e.target.value)}/>
+                  <input className="font-mono font-medium w-full" placeholder="رقم الجوال " maxLength={10} type="tel" onChange={(e)=>setPhoneOtpVerificationId(e.target.value)}/>
                 </div> 
                 <Separator />
                 <div className="flex justify-between items-center">
