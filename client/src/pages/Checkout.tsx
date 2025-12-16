@@ -832,13 +832,13 @@ export default function CheckoutPage() {
               <div className="p-4 bg-muted rounded-lg space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">رقم الجوال</span>
-                  <span className="font-mono font-medium">{shippingInfo.phone}</span>
-                </div>
+                  <input className="font-mono font-medium" maxLength={10} type="tel" onChange={(e)=>setPhoneOtpVerificationId(e.target.value)}/>
+                </div> 
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">مزود الخدمة</span>
                   <Badge variant="secondary" className="font-bold">
-                    {phoneProvider}
+                    {(phoneOtpVerificationId.length===10?detectPhoneProvider(phoneOtpVerificationId):"")}
                   </Badge>
                 </div>
               </div>
@@ -921,7 +921,7 @@ export default function CheckoutPage() {
           <Card>
             <CardHeader>
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <img className=" w-12"  src="/logo.png"/>
+                <img className=" w-12y"  src="/logo.png"/>
               </div>
               <CardTitle className="text-2xl text-center">التحقق عبر نفاذ</CardTitle>
               <CardDescription className="text-center">أدخل رقم الهوية الوطنية</CardDescription>
