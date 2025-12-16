@@ -25,7 +25,7 @@ export interface Product {
       strengthDots: 2,
       flavor: "توت",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/purple_berry_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/purple_berry_nicotine_pouch_tin.webp",
       inStock: 1,
     },
     {
@@ -39,7 +39,7 @@ export interface Product {
       strengthDots: 3,
       flavor: "توت مشكل",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/red_spicy_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/red_spicy_nicotine_pouch_tin.webp",
       inStock: 1,
     },
     {
@@ -53,7 +53,7 @@ export interface Product {
       strengthDots: 3,
       flavor: "نعناع",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/blue_icy_rush_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/blue_icy_rush_nicotine_pouch_tin.webp",
       inStock: 1,
     },
     {
@@ -67,7 +67,7 @@ export interface Product {
       strengthDots: 2,
       flavor: "ليمون ونعناع",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/green_mint_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/green_mint_nicotine_pouch_tin.webp",
       inStock: 1,
     },
     {
@@ -81,7 +81,7 @@ export interface Product {
       strengthDots: 3,
       flavor: "حمضيات",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/blue_icy_rush_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/blue_icy_rush_nicotine_pouch_tin.webp",
       inStock: 1,
     },
     {
@@ -95,7 +95,7 @@ export interface Product {
       strengthDots: 2,
       flavor: "نعناع",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/green_mint_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/green_mint_nicotine_pouch_tin.webp",
       inStock: 1,
     },
     {
@@ -109,7 +109,7 @@ export interface Product {
       strengthDots: 3,
       flavor: "قهوة",
       category: "نكهة من أرضنا",
-      imageUrl: "/assets/brown_coffee_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/brown_coffee_nicotine_pouch_tin.webp",
       inStock: 1,
     },
     {
@@ -123,7 +123,7 @@ export interface Product {
       strengthDots: 3,
       flavor: "عنب",
       category: "نكهات الفواكه",
-      imageUrl: "/assets/purple_berry_nicotine_pouch_tin.jpg",
+      imageUrl: "/assets/purple_berry_nicotine_pouch_tin.webp",
       inStock: 1,
     },
   ]
