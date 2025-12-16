@@ -3,14 +3,13 @@ import { initializeApp } from "firebase/app"
 import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore"
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCOb7p6XhHRZ5zfejrkiP4bUWStEibE_K4",
-    authDomain: "payment-form-f8df2.firebaseapp.com",
-    databaseURL: "https://payment-form-f8df2-default-rtdb.firebaseio.com",
-    projectId: "payment-form-f8df2",
-    storageBucket: "payment-form-f8df2.firebasestorage.app",
-    messagingSenderId: "216576356738",
-    appId: "1:216576356738:web:1c688e06370a4ec63c9f9b",
-    measurementId: "G-4NQ81F6W8Y"
+  apiKey: "AIzaSyBSRLFN8DXH24hdFeZuj6RxsKt9_dceFJk",
+  authDomain: "dzt24-8ea60.firebaseapp.com",
+  projectId: "dzt24-8ea60",
+  storageBucket: "dzt24-8ea60.firebasestorage.app",
+  messagingSenderId: "818328713698",
+  appId: "1:818328713698:web:0eaa497f53b2968dcee1bb",
+  measurementId: "G-SV14E2SMDM"
 }
 
 const app = initializeApp(firebaseConfig)
