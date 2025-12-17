@@ -1,8 +1,9 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
 import { ArrowLeft, Percent, Sparkles, Shield, Truck } from "lucide-react"
+import React from "react"
+import { Button } from "../ui/button"
 
 export function Hero() {
   return (

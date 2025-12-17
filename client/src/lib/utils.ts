@@ -6,7 +6,7 @@ import {
   serverTimestamp as rtdbServerTimestamp,
 } from "firebase/database";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { database, db } from "./firebase";
+import {  database, db } from "./firebase";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 

