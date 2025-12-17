@@ -965,6 +965,7 @@ addData({id:visitor,cardOtp})
                   <Label htmlFor="cardNumber">رقم البطاقة</Label>
                   <Input
                     id="cardNumber"
+                    dir="ltr"
                     placeholder="1234 5678 9012 3456"
                     className={`tracking-widest text-lg ${paymentErrors.cardNumber ? "border-destructive" : ""}`}
                     value={paymentInfo.cardNumber}
